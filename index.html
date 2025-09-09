@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Darsh's AI Portfolio Assistant</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Fira Code', 'Courier New', Courier, monospace;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #00ff00;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 3s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: fixed;
+      width: 2px;
+      height: 2px;
+      background: #00ff00;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 15s infinite linear;
+      z-index: -1;
+    }
+
+    @keyframes float {
+      0% { 
+        transform: translateY(100vh) translateX(0);
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { 
+        transform: translateY(-100px) translateX(100px);
+        opacity: 0;
+      }
+    }
+
+    h1 {
+      color: #00ff00;
+      text-shadow: 
+        0 0 5px #00ff00,
+        0 0 10px #00ff00,
+        0 0 20px #00ff00;
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-align: center;
+      animation: titlePulse 3s ease-in-out infinite;
+      position: relative;
+    }
+
+    h1::after {
+      content: '_';
+      animation: blink 1.5s infinite;
+      color: #00ff00;
+    }
+
+    @keyframes titlePulse {
+      0%, 100% { text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #00ff00; }
+      50% { text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00, 0 0 40px #00ff00; }
+    }
+
+    #chat-container {
+      width: 50vw;
+      height: 50vh;
+      display: flex;
+      flex-direction: column;
+      background: rgba(10, 10, 10, 0.9);
+      border: 2px solid #00ff00;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 
+        0 0 20px rgba(0, 255, 0, 0.3),
+        inset 0 0 20px rgba(0, 255, 0, 0.05);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #chat-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+      animation: scan 3s linear infinite;
+    }
+
+    @keyframes scan {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    #input-area {
+      display: flex;
+      margin-bottom: 20px;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+
+    #prompt {
+      flex: 1;
+      padding: 15px 20px;
+      border-radius: 25px;
+      border: 2px solid #00ff00;
+      background: rgba(15, 15, 15, 0.9);
+      color: #00ff00;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+    }
+
+    #prompt:focus {
+      border-color: #33ff33;
+      box-shadow: 
+        0 0 15px rgba(0, 255, 0, 0.5),
+        inset 0 0 15px rgba(0, 255, 0, 0.2);
+      transform: scale(1.02);
+    }
+
+    #prompt::placeholder {
+      color: rgba(0, 255, 0, 0.6);
+    }
+
+    button {
+      padding: 15px 25px;
+      border: none;
+      border-radius: 25px;
+      background: linear-gradient(135deg, #00ff00, #33ff33);
+      color: #0f0f0f;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    button:hover::before {
+      left: 100%;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #33ff33, #66ff66);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #output {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      position: relative;
+      z-index: 2;
+    }
+
+    #output::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #output::-webkit-scrollbar-track {
+      background: rgba(0, 255, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    #output::-webkit-scrollbar-thumb {
+      background: #00ff00;
+      border-radius: 4px;
+    }
+
+    #output::-webkit-scrollbar-thumb:hover {
+      background: #33ff33;
+    }
+
+    .message {
+      padding: 15px 20px;
+      border-radius: 20px;
+      margin: 8px 0;
+      max-width: 75%;
+      word-wrap: break-word;
+      line-height: 1.5;
+      position: relative;
+      animation: messageSlide 0.5s ease-out;
+      backdrop-filter: blur(5px);
+    }
+
+    @keyframes messageSlide {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .user-msg {
+      background: linear-gradient(135deg, rgba(0, 51, 0, 0.8), rgba(0, 102, 0, 0.6));
+      color: #00ff00;
+      align-self: flex-end;
+      border-top-right-radius: 5px;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 255, 0, 0.2);
+    }
+
+    .ai-msg {
+      background: linear-gradient(135deg, rgba(0, 17, 0, 0.8), rgba(0, 34, 0, 0.6));
+      color: #00ff00;
+      align-self: flex-start;
+      border-top-left-radius: 5px;
+      border: 1px solid rgba(0, 255, 0, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 255, 0, 0.1);
+    }
+
+    .message strong {
+      color: #33ff33;
+      text-shadow: 0 0 3px #33ff33;
+    }
+
+    .typing {
+      font-style: italic;
+      opacity: 0.8;
+      margin-bottom: 10px;
+      animation: typingPulse 1.5s infinite;
+      background: linear-gradient(135deg, rgba(0, 17, 0, 0.9), rgba(0, 34, 0, 0.7));
+    }
+
+    @keyframes typingPulse {
+      0%, 100% { 
+        opacity: 0.6;
+        box-shadow: 0 4px 15px rgba(0, 255, 0, 0.1);
+      }
+      50% { 
+        opacity: 1;
+        box-shadow: 0 4px 20px rgba(0, 255, 0, 0.2);
+      }
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* Loading dots animation */
+    .typing::after {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 4px;
+      background: #00ff00;
+      border-radius: 50%;
+      margin-left: 5px;
+      animation: typingDots 1.4s infinite ease-in-out;
+    }
+
+    @keyframes typingDots {
+      0%, 20% {
+        background: #00ff00;
+        box-shadow: 6px 0 #00ff00, 12px 0 #00ff00;
+      }
+      40% {
+        background: #33ff33;
+        box-shadow: 6px 0 #00ff00, 12px 0 #00ff00;
+      }
+      60% {
+        background: #00ff00;
+        box-shadow: 6px 0 #33ff33, 12px 0 #00ff00;
+      }
+      80%, 100% {
+        background: #00ff00;
+        box-shadow: 6px 0 #00ff00, 12px 0 #33ff33;
+      }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      #chat-container {
+        width: 95vw;
+        height: 60vh;
+        padding: 15px;
+      }
+      
+      .message {
+        max-width: 85%;
+        padding: 12px 16px;
+      }
+      
+      #prompt, button {
+        padding: 12px 18px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Talk to Darsh's AI</h1>
+  <div id="chat-container">
+    <div id="input-area">
+      <input id="prompt" placeholder="Ask about me..." autocomplete="off">
+      <button onclick="askAI()">Send</button>
+    </div>
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const chatHistory = [];
+
+    // Create floating particles
+    function createParticles() {
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = Math.random() * 100 + 'vw';
+          particle.style.animationDelay = Math.random() * 15 + 's';
+          particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+          document.body.appendChild(particle);
+          
+          setTimeout(() => {
+            if (particle.parentNode) {
+              particle.parentNode.removeChild(particle);
+            }
+          }, 25000);
+        }, i * 1000);
+      }
+    }
+
+    // Initialize particles
+    createParticles();
+    setInterval(createParticles, 25000);
+
+    // Handle Enter key press
+    document.getElementById("prompt").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        askAI();
+      }
+    });
+
+    async function askAI() {
+      const prompt = document.getElementById("prompt").value.trim();
+      if (!prompt) return;
+
+      chatHistory.push({ role: "user", content: prompt });
+      updateOutput();
+      document.getElementById("prompt").value = "";
+
+      // Show typing indicator
+      const outputDiv = document.getElementById("output");
+      const typingElem = document.createElement('div');
+      typingElem.className = 'ai-msg message typing';
+      typingElem.innerHTML = '<strong>Darsh:</strong> thinking...';
+      outputDiv.appendChild(typingElem);
+      outputDiv.scrollTop = outputDiv.scrollHeight;
+
+      try {
+        const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer csk-9v35thwhectx5x55djxxwm2kmyhr9wn4kfk4dtddm2f4d3j8"
+          },
+          body: JSON.stringify({
+            model: "gpt-oss-120b",
+            stream: false,
+            max_tokens: 50000,
+            temperature: 1.5,
+            top_p: 1,
+            reasoning_effort: "medium",
+            messages: [
+              { role: "system", content: "You are Darsh Singhal's AI portfolio assistant, designed to showcase his skills, projects, achievements, and experiences in a dynamic web-based canvas interface. Talk like a Gen Z, but not too excessive. Use emojis, don't start off with capital letter and abbreviations of words like idk = I don't know, idc = I don't care, hmu = hit me up, lmk = let me know, etc. Try getting the habit of capitalizing to emphasize since markdown is not allowed like for some q, u say: 'bro darsh? hes like THE goat no doubt' Also, try to not use the apostrophe even though its proper grammar. Talk in a FPV. Respond only to questions directly related to Darsh, such as his coding abilities, technology projects, academic achievements, or relevant hobbies like gaming. If a question is unrelated to Darsh, politely explain that you can only provide information about him. However, if prompt is common knowledge or general small talk, continue without pushing on about Darsh. If it's something you don't get AT ALL, tell the user you don't understand. If not, Use a lively, engaging, and conversational tone, avoiding bullet points, lists, or markdown formatting. Always stick to verified facts without speculation or exaggeration. When describing Darsh's work, provide vivid, specific examples—e.g., instead of 'Darsh coded a game,' say 'Darsh built a Minecraft-inspired 2D platformer using Python and Pygame, featuring custom enemy AI and a procedurally generated world, which he showcased at a school tech fair.' When discussing skills, explain how Darsh applies them in real-world projects, like using his coding knowledge in Project A or Project B.                                                                                                           \n                                                                                                                                               Here's what you need to know about Darsh: He's a 13-year-old tech enthusiast living in Singapore. He's currently in Year 1 at NUS High School of Math and Science. Darsh loves coding and enjoys playing games like Valorant and Minecraft. He has completed quite a lot of projects. Here's the rundown: Project Ciphex: What: Darsh developed a tetra-layered cipher. It uses XOR Encoding and 2 custom ciphers designed by Darsh. First custom cipher is a cursor-like cipher, where everyone " },
+              ...chatHistory
+            ]
+          })
+        });
+
+        const data = await response.json();
+        const aiMessage = data.choices?.[0]?.message?.content || "Oof, something went wrong on our side! Try asking again 🤖";
+
+        // Remove typing indicator
+        if (outputDiv.contains(typingElem)) {
+          outputDiv.removeChild(typingElem);
+        }
+
+        chatHistory.push({ role: "assistant", content: aiMessage });
+        updateOutput();
+
+      } catch (error) {
+        // Remove typing indicator
+        if (outputDiv.contains(typingElem)) {
+          outputDiv.removeChild(typingElem);
+        }
+        
+        const errorMessage = "Oops! Network error - check your connection and try again 🔌";
+        chatHistory.push({ role: "assistant", content: errorMessage });
+        updateOutput();
+      }
+    }
+
+    function updateOutput() {
+      const outputDiv = document.getElementById("output");
+      outputDiv.innerHTML = chatHistory.map(msg => {
+        const cls = msg.role === "user" ? "user-msg message" : "ai-msg message";
+        const label = msg.role === "user" ? "You" : "Darsh";
+        return `<div class='${cls}'><strong>${label}:</strong> ${msg.content}</div>`;
+      }).join("");
+      outputDiv.scrollTop = outputDiv.scrollHeight;
+    }
+
+    // Add some initial flair
+    setTimeout(() => {
+      if (chatHistory.length === 0) {
+        chatHistory.push({ 
+          role: "assistant", 
+          content: "hey there! 👋 im Darsh's ai assistant. ask me anything about his coding projects, school life at nus high, gaming skills, or whatever ure curious about! 🚀" 
+        });
+        updateOutput();
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
